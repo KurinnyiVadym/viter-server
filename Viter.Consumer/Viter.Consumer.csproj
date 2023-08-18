@@ -6,13 +6,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <ContainerImageName>kurinnyi/viter-consumer</ContainerImageName>
-        <ContainerImageTag>1.0.1</ContainerImageTag>
+        <ContainerImageTag>1.0.2</ContainerImageTag>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Azure.Messaging.EventHubs" Version="5.9.2" />
         <PackageReference Include="Azure.Messaging.EventHubs.Processor" Version="5.9.2" />
         <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="6.0.1" />
+        <PackageReference Include="Microsoft.Azure.Devices" Version="1.39.0" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
         <PackageReference Include="Microsoft.NET.Build.Containers" Version="7.0.400" />
         <PackageReference Include="NRedisTimeSeries" Version="1.4.0" />
