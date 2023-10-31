@@ -1,18 +1,18 @@
 using Azure.Messaging.EventHubs.Primitives;
 using Microsoft.Azure.Devices;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
-using NRedisTimeSeries;
 using StackExchange.Redis;
 using Viter.Consumer.Consumer;
 using Viter.Consumer.Consumer.Data;
 using Viter.Consumer.DataBase;
+using Viter.Consumer.Endpoints;
 
 
 var builder = WebApplication.CreateBuilder(args);
 string connectionString = builder.Configuration["AzureAppConfig_ConnectionString"]!;
 
 // Load configuration from Azure App Configuration
-builder.Configuration.AddAzureAppConfiguration(opt =>
+    builder.Configuration.AddAzureAppConfiguration(opt =>
 {
     opt.Connect(connectionString)
         .Select(KeyFilter.Any)
@@ -34,11 +34,6 @@ var app = builder.Build();
 
 
 app.MapGet("/", () => "Hello World!");
-app.MapGet("/api/devices", async (RegistryManager registryManager, ITimeSeriesManager timeSeriesManager, IDatabase database) =>
-{
-    IEnumerable<Device> devices = await registryManager.GetDevicesAsync(100);
-    
-    return devices.Select(d => new
-        { d.Id, d.ConnectionState, d.ConnectionStateUpdatedTime, d.LastActivityTime, d.StatusUpdatedTime, data = database.TimeSeriesGet(timeSeriesManager.GetKeyForDevice("temperature", d.Id).Result) });
-});
+app.AddEndpoints();
+
 await app.RunAsync();

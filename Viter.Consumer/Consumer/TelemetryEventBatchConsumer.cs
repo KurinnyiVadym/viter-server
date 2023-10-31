@@ -30,6 +30,7 @@ public class TelemetryEventBatchConsumer : IEventBatchConsumer
     public async Task<EventData?> OnMessagesReceived(IEnumerable<EventData> messages, EventProcessorPartition partition)
     {
         EventData? last = null;
+        List<(string, TimeStamp, double)> sequence = new();
         foreach (EventData eventData in messages)
         {
             try
@@ -59,11 +60,8 @@ public class TelemetryEventBatchConsumer : IEventBatchConsumer
 
                 string temperatureKey = await _timeSeriesManager.GetKeyForDevice("temperature", data.DeviceId);
                 string humidityKey = await _timeSeriesManager.GetKeyForDevice("humidity", data.DeviceId);
-                await _redis.TimeSeriesMAddAsync(new List<(string, TimeStamp, double)>
-                {
-                    (temperatureKey, timeStamp, data.Temperature),
-                    (humidityKey, timeStamp, data.Humidity)
-                });
+                sequence.Add((temperatureKey, timeStamp, data.Temperature));
+                sequence.Add((humidityKey, timeStamp, data.Humidity));
             }
             catch (Exception e)
             {
@@ -72,6 +70,8 @@ public class TelemetryEventBatchConsumer : IEventBatchConsumer
 
             last = eventData;
         }
+
+        await _redis.TimeSeriesMAddAsync(sequence);
 
         return last;
     }
