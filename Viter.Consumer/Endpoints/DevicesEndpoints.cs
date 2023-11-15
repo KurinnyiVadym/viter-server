@@ -11,14 +11,27 @@ public static class DevicesEndpoints
     {
         root.MapGet("/devices", async (RegistryManager registryManager, ITimeSeriesManager timeSeriesManager, IDatabase database) =>
         {
+
             IEnumerable<Device> devices = await registryManager.GetDevicesAsync(100);
-    
-            return devices.Select(d => new
-                { d.Id, d.ConnectionState, d.ConnectionStateUpdatedTime, d.LastActivityTime, d.StatusUpdatedTime, data = new
+
+            var tasks = devices.AsParallel().Select(async d => new
+            {
+                d.Id,
+                d.ConnectionState,
+                d.ConnectionStateUpdatedTime,
+                d.LastActivityTime,
+                d.StatusUpdatedTime,
+                data = new
                 {
-                    temperature= database.TimeSeriesGet(timeSeriesManager.GetKeyForDevice("temperature", d.Id).Result),
-                    humidity= database.TimeSeriesGet(timeSeriesManager.GetKeyForDevice("humidity", d.Id).Result),
-                } });
+                    temperature = await database.TimeSeriesGetAsync(await timeSeriesManager.GetKeyForDevice("temperature", d.Id)),
+                    humidity = await database.TimeSeriesGetAsync(await timeSeriesManager.GetKeyForDevice("humidity", d.Id)),
+                }
+            }).ToList();
+
+            await Task.WhenAll();
+
+            var result = tasks.Select(t => t.Result);
+            return result;
         });
         return root;
     }
