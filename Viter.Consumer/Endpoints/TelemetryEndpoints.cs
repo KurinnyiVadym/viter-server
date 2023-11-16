@@ -21,17 +21,14 @@ public static class TelemetryEndpoints
                 return Results.NotFound();
             }
 
-            //await database.TimeSeriesMGetAsync(new List<string>() { $"id={deviceId}" }, true);
-            TimeSeriesTuple[] timeSeries = await Task.WhenAll(
-                database.TimeSeriesGetAsync(await timeSeriesManager.GetKeyForDevice("temperature", deviceId)),
-                database.TimeSeriesGetAsync(await timeSeriesManager.GetKeyForDevice("humidity", deviceId)));
+            IReadOnlyList<(string key, IReadOnlyList<TimeSeriesLabel> labels, TimeSeriesTuple value)> timeSeries = await database.TimeSeriesMGetAsync(new List<string>() { $"id={deviceId}" }, false);
 
             TelemetryResponse telemetry = new()
             {
                 DeviceId = deviceId,
-                Time = timeSeries[0].Time,
-                Temperature = timeSeries[0].Val,
-                Humidity = timeSeries[1].Val
+                Time = DateTimeOffset.FromUnixTimeMilliseconds((long)timeSeries.First(ts => ts.key.Contains("temperature")).value.Time).DateTime,
+                Temperature = timeSeries.First(ts => ts.key.Contains("temperature")).value.Val,
+                Humidity = timeSeries.First(ts => ts.key.Contains("humidity")).value.Val
             };
 
             return Results.Ok(telemetry);
@@ -50,9 +47,10 @@ public static class TelemetryEndpoints
                 return Results.NotFound();
             }
 
-            var res = await database.TimeSeriesRangeAsync(await timeSeriesManager.GetKeyForDevice("temperature", deviceId), from, to);
-
-
+            var res = await database.TimeSeriesMRevRangeAsync(
+            new DateTimeOffset(from.Value, TimeSpan.Zero).ToUnixTimeMilliseconds(), new DateTimeOffset(to.Value, TimeSpan.Zero).ToUnixTimeMilliseconds()
+            , new[]{$"id={deviceId}"});
+            //todo use model
 
             return Results.Ok(res);
         });
