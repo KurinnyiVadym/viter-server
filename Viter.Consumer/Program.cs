@@ -5,8 +5,6 @@ using StackExchange.Redis;
 using Viter.Consumer.Consumer;
 using Viter.Consumer.Consumer.Data;
 using Viter.Consumer.DataBase;
-using Viter.Consumer.Endpoints;
-
 
 var builder = WebApplication.CreateBuilder(args);
 string connectionString = builder.Configuration["AzureAppConfig_ConnectionString"]!;
@@ -29,11 +27,10 @@ services.AddHostedService<SimpleBatchProcessor>();
 //api
 services.AddSingleton(
     RegistryManager.CreateFromConnectionString(builder.Configuration["ConnectionString:DeviceRegistryManager"]));
-// //
+
 var app = builder.Build();
 
 
-app.MapGet("/", () => "Hello World!");
-app.AddEndpoints();
+app.MapGet("/", () => "Hello Consumer!");
 
 await app.RunAsync();
