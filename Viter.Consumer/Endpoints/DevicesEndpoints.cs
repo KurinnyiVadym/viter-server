@@ -20,12 +20,7 @@ public static class DevicesEndpoints
                 d.ConnectionState,
                 d.ConnectionStateUpdatedTime,
                 d.LastActivityTime,
-                d.StatusUpdatedTime,
-                data = new
-                {
-                    temperature = await database.TimeSeriesGetAsync(await timeSeriesManager.GetKeyForDevice("temperature", d.Id)),
-                    humidity = await database.TimeSeriesGetAsync(await timeSeriesManager.GetKeyForDevice("humidity", d.Id)),
-                }
+                d.StatusUpdatedTime
             }).ToList();
 
             await Task.WhenAll();

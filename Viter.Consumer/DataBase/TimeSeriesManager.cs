@@ -23,22 +23,24 @@ internal class TimeSeriesManager : ITimeSeriesManager
 
         if (!_deviceKeys.TryGetValue(redisKey, out _))
         {
-            await CreateTimeSeries(redisKey, deviceId);
+            await CreateTimeSeries(redisKey, keyPrefix, deviceId);
             _deviceKeys.Add(redisKey);
         }
 
         return redisKey;
     }
 
-    private async Task CreateTimeSeries(string redisKey, string deviceId)
+    private async Task CreateTimeSeries(string redisKey, string lable, string deviceId)
     {
-        long retentionTime = (long)TimeSpan.FromDays(7).TotalMilliseconds;
+        long retentionTime = (long)TimeSpan.FromDays(365).TotalMilliseconds;
         try
         {
             if (!await _redis.KeyExistsAsync(redisKey))
             {
                 await _redis.TimeSeriesCreateAsync(redisKey, retentionTime,
-                    new List<TimeSeriesLabel> { new TimeSeriesLabel("id", deviceId) },
+                    new List<TimeSeriesLabel> { 
+                        new TimeSeriesLabel("id", deviceId), 
+                        new TimeSeriesLabel("telemetry", lable) },
                     duplicatePolicy: TsDuplicatePolicy.LAST);
                 _logger.LogInformation("Key {RedisKey} was created.", redisKey);
             }
