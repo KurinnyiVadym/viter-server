@@ -2,9 +2,8 @@
 
 public class BatchProcessorOptions
 {
-    int EventBatchMaximumCount { get; set; }
-    string ConsumerGroup { get; set; }
-    string EventHubConnectionString { get; set; }
-    string EventHubName { get; set; }
-    bool ExitOnError { get; set; }
+    public int EventBatchMaximumCount { get; set; } = 100;
+    public string ConsumerGroup { get; set; }
+    public string EventHubConnectionString { get; set; }
+    public string EventHubName { get; set; }
 }

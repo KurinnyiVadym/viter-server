@@ -1,96 +1,98 @@
 ﻿using Azure.Messaging.EventHubs;
 using Azure.Messaging.EventHubs.Primitives;
+using Microsoft.Extensions.Options;
 
 namespace Viter.Consumer.Consumer;
 
 public class SimpleBatchProcessor : PluggableCheckpointStoreEventProcessor<EventProcessorPartition>, IHostedService
-    {
+{
 
-        private readonly IEventBatchConsumer _consumer;
-        private readonly ILogger<SimpleBatchProcessor> _logger;
+    private readonly IEventBatchConsumer _consumer;
+    private readonly ILogger<SimpleBatchProcessor> _logger;
+    private readonly BatchProcessorOptions _options;
 
-        public SimpleBatchProcessor(CheckpointStore checkpointStore,
+    public SimpleBatchProcessor(CheckpointStore checkpointStore,
             IConfiguration configuration,
             IEventBatchConsumer consumer,
             ILogger<SimpleBatchProcessor> logger,
+            IOptions<BatchProcessorOptions> options,
             EventProcessorOptions? clientOptions = default)
             : base(
                 checkpointStore,
-                configuration.GetValue("EventBatchMaximumCount", 100),
-                configuration["EventHubConsumerGroup"],
-                configuration.GetConnectionString("EventHub"),
-                configuration["EventHubName"],
+                options.Value.EventBatchMaximumCount,
+                options.Value.ConsumerGroup,
+                options.Value.EventHubConnectionString,
+                options.Value.EventHubName,
                 clientOptions)
+    {
+        _logger = logger;
+        _options = options.Value;
+        logger.LogInformation($"Connecting to event hub {options.Value.EventHubName} using consumer group {options.Value.ConsumerGroup}");
+        _consumer = consumer;
+    }
+
+    public bool ExitOnError { get; }
+
+    protected override async Task OnProcessingEventBatchAsync(IEnumerable<EventData> events,
+        EventProcessorPartition partition,
+        CancellationToken cancellationToken)
+    {
+        try
         {
-            _logger = logger;
-            logger.LogInformation($"Connecting to event hub {configuration["EventHubName"]} using consumer group {configuration["EventHubConsumerGroup"]}");
-            _consumer = consumer;
-
-            // ExitOnError = options.ExitOnError;
-        }
-
-        public bool ExitOnError { get; }
-
-        protected override async Task OnProcessingEventBatchAsync(IEnumerable<EventData> events,
-            EventProcessorPartition partition,
-            CancellationToken cancellationToken)
-        {
-            try
+            EventData? lastEvent = await _consumer.OnMessagesReceived(events, partition);
+            if (lastEvent == null)
             {
-                EventData? lastEvent = await _consumer.OnMessagesReceived(events, partition);
-                if (lastEvent == null)
-                {
-                    return;
-                }
-
-                await UpdateCheckpointAsync(
-                    partition.PartitionId,
-                    lastEvent.Offset,
-                    lastEvent.SequenceNumber,
-                    cancellationToken);
-                if (_logger.IsEnabled(LogLevel.Debug))
-                {
-                    _logger.LogDebug(
-                        $"UpdatedCheckpoint on partitionId {partition.PartitionId} to offset: {lastEvent.Offset}, sequence number: {lastEvent.SequenceNumber}");
-                }
+                return;
             }
-            catch (Exception ex)
+
+            await UpdateCheckpointAsync(
+                partition.PartitionId,
+                lastEvent.Offset,
+                lastEvent.SequenceNumber,
+                cancellationToken);
+            if (_logger.IsEnabled(LogLevel.Debug))
             {
-                EventData? firstEvent = events.FirstOrDefault();
-                _logger.LogError(ex, $"An error occurred processing events in partition {partition.PartitionId} from offset {firstEvent?.Offset}, sequence number {firstEvent?.SequenceNumber}");
-                if (ExitOnError)
-                {
-                    Environment.Exit(1);
-                }
+                _logger.LogDebug(
+                    $"UpdatedCheckpoint on partitionId {partition.PartitionId} to offset: {lastEvent.Offset}, sequence number: {lastEvent.SequenceNumber}");
             }
         }
-
-        protected override Task OnProcessingErrorAsync(Exception exception,
-            EventProcessorPartition partition,
-            string operationDescription,
-            CancellationToken cancellationToken)
+        catch (Exception ex)
         {
-            _logger.LogError(exception, $"An error occurred processing events in partition {partition?.PartitionId}. The operation description was '{operationDescription}'.");
-            return Task.CompletedTask;
-        }
-
-        public async Task StartAsync(CancellationToken cancellationToken)
-        {
-            try
+            EventData? firstEvent = events.FirstOrDefault();
+            _logger.LogError(ex, $"An error occurred processing events in partition {partition.PartitionId} from offset {firstEvent?.Offset}, sequence number {firstEvent?.SequenceNumber}");
+            if (ExitOnError)
             {
-                await _consumer.StartAsync();
-                await StartProcessingAsync(cancellationToken);
+                Environment.Exit(1);
             }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex, "Error starting processing.");
-                throw;
-            }
-        }
-
-        public async Task StopAsync(CancellationToken cancellationToken)
-        {
-            await _consumer.StopAsync();
-            await StopProcessingAsync(cancellationToken);
         }
     }
+
+    protected override Task OnProcessingErrorAsync(Exception exception,
+        EventProcessorPartition partition,
+        string operationDescription,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogError(exception, $"An error occurred processing events in partition {partition?.PartitionId}. The operation description was '{operationDescription}'.");
+        return Task.CompletedTask;
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _consumer.StartAsync();
+            await StartProcessingAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, "Error starting processing.");
+            throw;
+        }
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await _consumer.StopAsync();
+        await StopProcessingAsync(cancellationToken);
+    }
+}
