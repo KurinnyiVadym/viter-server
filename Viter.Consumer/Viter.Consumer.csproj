@@ -8,6 +8,11 @@
     <ContainerImageTag>1.0.5</ContainerImageTag>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.Azure.IoTHub" Version="7.0.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.Redis" Version="7.0.1" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI" Version="7.0.2" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="7.1.0" />
+    <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="7.0.0" />
     <PackageReference Include="Azure.Messaging.EventHubs" Version="5.9.2" />
     <PackageReference Include="Azure.Messaging.EventHubs.Processor" Version="5.9.2" />
     <PackageReference Include="Microsoft.Azure.AppConfiguration.AspNetCore" Version="6.0.1" />
