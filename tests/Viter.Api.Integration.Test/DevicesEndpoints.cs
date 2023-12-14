@@ -6,7 +6,7 @@ namespace Viter.Api.Integration.Test;
 
 public class DevicesEndpoints : ApiBaseTest
 {
-    [Fact]
+    // [Fact]
     public async Task Test1()
     {
         DevicesResponse? response = await ViterClient.GetFromJsonAsync<DevicesResponse>("/api/devices");

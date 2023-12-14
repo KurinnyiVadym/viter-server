@@ -1,8 +1,6 @@
 using Azure.Messaging.EventHubs.Primitives;
 using HealthChecks.UI.Client;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Azure.Devices;
-using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using StackExchange.Redis;
 using Viter.Consumer.Consumer;
