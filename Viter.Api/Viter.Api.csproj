@@ -3,9 +3,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <ContainerImageName>kurinnyi/viter-api</ContainerImageName>
-    <ContainerImageTag>latest</ContainerImageTag>
+    <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
+    <WebPublishMethod>Container</WebPublishMethod>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:8.0</ContainerBaseImage>
+    <ContainerImageTag>1.0.0</ContainerImageTag>
+    <ContainerRegistry>ghcr.io</ContainerRegistry>
+    <ContainerRepository>KurinnyiVadym/viter-api</ContainerRepository>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
