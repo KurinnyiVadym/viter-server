@@ -2,9 +2,9 @@
 
 public class PartitionOwnershipValue
 {
-    public string OwnerIdentifier { get; set; }
+    public required string OwnerIdentifier { get; set; }
 
-    public DateTimeOffset LastModifiedTime { get; set; }
+    public required DateTimeOffset LastModifiedTime { get; set; }
 
-    public string Version { get; set; }
+    public required string Version { get; set; }
 }

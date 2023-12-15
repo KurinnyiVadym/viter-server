@@ -3,7 +3,7 @@
 public class BatchProcessorOptions
 {
     public int EventBatchMaximumCount { get; set; } = 100;
-    public string ConsumerGroup { get; set; }
-    public string EventHubConnectionString { get; set; }
-    public string EventHubName { get; set; }
+    public required string ConsumerGroup { get; set; }
+    public required string EventHubConnectionString { get; set; }
+    public required string EventHubName { get; set; }
 }
