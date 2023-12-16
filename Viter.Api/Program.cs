@@ -1,9 +1,10 @@
+using HealthChecks.UI.Client;
 using Microsoft.Azure.Devices;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
 using StackExchange.Redis;
 using Viter.Api.Endpoints;
-var builder = WebApplication.CreateBuilder(args);
 
+var builder = WebApplication.CreateBuilder(args);
 
 string connectionString = builder.Configuration["AzureAppConfig_ConnectionString"];
 builder.Configuration.AddAzureAppConfiguration(opt =>
@@ -12,6 +13,21 @@ builder.Configuration.AddAzureAppConfiguration(opt =>
         .Select(KeyFilter.Any)
         .Select(KeyFilter.Any, builder.Environment.EnvironmentName);
 });
+
+builder.Services.AddHealthChecks()
+.AddRedis(builder.Configuration.GetConnectionString("Redis")!)
+.AddAzureIoTHub(opt =>
+{
+    opt.AddConnectionString(builder.Configuration.GetConnectionString("DeviceRegistryManager")!)
+    .AddRegistryReadCheck();
+});
+builder.Services
+.AddHealthChecksUI(options =>
+{
+    options.SetEvaluationTimeInSeconds(30);
+    options.AddHealthCheckEndpoint("Healthcheck API", "/healthcheck");
+}).AddInMemoryStorage();
+
 builder.Services.AddSingleton<ConnectionMultiplexer>(sp =>
     ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!));
 builder.Services.AddSingleton<IDatabase>(sp => sp.GetRequiredService<ConnectionMultiplexer>().GetDatabase());
@@ -35,5 +51,11 @@ app.UseHttpsRedirection();
 
 app.AddEndpoints()
 .WithOpenApi();
+app.MapHealthChecks("/healthcheck", new()
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+app.MapHealthChecksUI(options => options.UIPath = "/dashboard");
 
 app.Run();
