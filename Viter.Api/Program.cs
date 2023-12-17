@@ -28,6 +28,8 @@ builder.Services
     options.AddHealthCheckEndpoint("Healthcheck API", "/healthcheck");
 }).AddInMemoryStorage();
 
+builder.Services.AddCors();
+
 builder.Services.AddSingleton<ConnectionMultiplexer>(sp =>
     ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis")!));
 builder.Services.AddSingleton<IDatabase>(sp => sp.GetRequiredService<ConnectionMultiplexer>().GetDatabase());
