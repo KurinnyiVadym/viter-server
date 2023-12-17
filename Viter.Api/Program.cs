@@ -56,6 +56,9 @@ app.MapHealthChecks("/healthcheck", new()
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
 
-app.MapHealthChecksUI(options => options.UIPath = "/dashboard");
+app.UseCors(corsBuilder => corsBuilder
+    .AllowAnyOrigin()
+    .AllowAnyHeader()
+    .AllowAnyMethod());
 
 app.Run();
