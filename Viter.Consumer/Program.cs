@@ -2,6 +2,7 @@ using Azure.Messaging.EventHubs.Primitives;
 using HealthChecks.UI.Client;
 using Microsoft.Azure.Devices;
 using Microsoft.Extensions.Configuration.AzureAppConfiguration;
+using OpenTelemetry.Metrics;
 using StackExchange.Redis;
 using Viter.Consumer.Consumer;
 using Viter.Consumer.Consumer.Data;
@@ -44,8 +45,23 @@ services.AddSingleton<ITimeSeriesManager, TimeSeriesManager>();
 services.AddHostedService<SimpleBatchProcessor>();
 services.AddSingleton(RegistryManager.CreateFromConnectionString(builder.Configuration.GetConnectionString("DeviceRegistryManager")));
 
+builder.Services.AddOpenTelemetry()
+    .WithMetrics(builder =>
+    {
+        builder.AddPrometheusExporter();
+
+        builder.AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel");
+        builder.AddView("http.server.request.duration",
+            new ExplicitBucketHistogramConfiguration
+            {
+                Boundaries = new double[] { 0, 0.005, 0.01, 0.025, 0.05,
+                    0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10 }
+            });
+    });
+
 var app = builder.Build();
 
+app.MapPrometheusScrapingEndpoint();
 app.MapGet("/", () => "Hello Consumer!");
 app.MapHealthChecks("/healthcheck", new()
 {
