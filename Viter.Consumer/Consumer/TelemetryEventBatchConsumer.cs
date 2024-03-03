@@ -70,7 +70,7 @@ public class TelemetryEventBatchConsumer : IEventBatchConsumer
                     (humidityKey, timeStamp, data.Humidity)
                 });
                 _telemetryMetrics.IncreaseProcessedCount(1);
-                _temperatureMetrics.SetTemperature(data.Temperature, data.DeviceId);
+                _temperatureMetrics.SetTelemetry(data);
             }
             catch (Exception e)
             {
