@@ -5,6 +5,7 @@ using NRedisTimeSeries;
 using NRedisTimeSeries.DataTypes;
 using StackExchange.Redis;
 using Viter.Consumer.DataBase;
+using Viter.Consumer.Metrics;
 using Viter.Consumer.Models;
 
 namespace Viter.Consumer.Consumer;
@@ -14,12 +15,16 @@ public class TelemetryEventBatchConsumer : IEventBatchConsumer
     private readonly ILogger<TelemetryEventBatchConsumer> _logger;
     private readonly IDatabase _redis;
     private readonly ITimeSeriesManager _timeSeriesManager;
+    private readonly TelemetryMetrics _telemetryMetrics;
+    private readonly TemperatureMetrics _temperatureMetrics;
 
-    public TelemetryEventBatchConsumer(ILogger<TelemetryEventBatchConsumer> logger, IDatabase redis, ITimeSeriesManager timeSeriesManager)
+    public TelemetryEventBatchConsumer(ILogger<TelemetryEventBatchConsumer> logger, IDatabase redis, ITimeSeriesManager timeSeriesManager, TelemetryMetrics telemetryMetrics, TemperatureMetrics temperatureMetrics)
     {
         _logger = logger;
         _redis = redis;
         _timeSeriesManager = timeSeriesManager;
+        _telemetryMetrics = telemetryMetrics;
+        _temperatureMetrics = temperatureMetrics;
     }
 
     public Task StartAsync()
@@ -64,6 +69,8 @@ public class TelemetryEventBatchConsumer : IEventBatchConsumer
                     (temperatureKey, timeStamp, data.Temperature),
                     (humidityKey, timeStamp, data.Humidity)
                 });
+                _telemetryMetrics.IncreaseProcessedCount(1);
+                _temperatureMetrics.SetTemperature(data.Temperature, data.DeviceId);
             }
             catch (Exception e)
             {

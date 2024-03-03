@@ -7,6 +7,7 @@ using StackExchange.Redis;
 using Viter.Consumer.Consumer;
 using Viter.Consumer.Consumer.Data;
 using Viter.Consumer.DataBase;
+using Viter.Consumer.Metrics;
 
 var builder = WebApplication.CreateBuilder(args);
 string connectionString = builder.Configuration["AzureAppConfig_ConnectionString"]!;
@@ -42,6 +43,8 @@ services.Configure<BatchProcessorOptions>(builder.Configuration.GetSection("Batc
 services.AddSingleton<CheckpointStore, RedisCheckpointStore>();
 services.AddSingleton<IEventBatchConsumer, TelemetryEventBatchConsumer>();
 services.AddSingleton<ITimeSeriesManager, TimeSeriesManager>();
+services.AddSingleton<TelemetryMetrics>();
+services.AddSingleton<TemperatureMetrics>();
 services.AddHostedService<SimpleBatchProcessor>();
 services.AddSingleton(RegistryManager.CreateFromConnectionString(builder.Configuration.GetConnectionString("DeviceRegistryManager")));
 
@@ -51,6 +54,7 @@ builder.Services.AddOpenTelemetry()
         builder.AddPrometheusExporter();
 
         builder.AddMeter("Microsoft.AspNetCore.Hosting", "Microsoft.AspNetCore.Server.Kestrel");
+        builder.AddMeter("Viter.Telemetry");
         builder.AddView("http.server.request.duration",
             new ExplicitBucketHistogramConfiguration
             {
