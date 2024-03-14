@@ -46,6 +46,7 @@ services.AddSingleton<ITimeSeriesManager, TimeSeriesManager>();
 services.AddSingleton<TelemetryMetrics>();
 services.AddSingleton<TemperatureMetrics>();
 services.AddHostedService<SimpleBatchProcessor>();
+services.AddSingleton(TimeProvider.System);
 services.AddSingleton(RegistryManager.CreateFromConnectionString(builder.Configuration.GetConnectionString("DeviceRegistryManager")));
 
 builder.Services.AddOpenTelemetry()

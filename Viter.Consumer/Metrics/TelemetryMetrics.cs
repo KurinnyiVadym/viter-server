@@ -10,7 +10,6 @@ public class TelemetryMetrics
     {
         Meter meterInstance = meterFactory.Create("Viter.Telemetry");
         _processedTelemetryCount = meterInstance.CreateCounter<int>("viter.telemetry.processed-telemetry-count");
-        
     }
 
     public void IncreaseProcessedCount(int quantity)
