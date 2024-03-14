@@ -4,6 +4,8 @@
 name: .NET
 
 on:
+  workflow_dispatch:
+  # trigger workflow on push to master when changes happen in one folder
   push:
     branches: [ "main" ]
   pull_request:
