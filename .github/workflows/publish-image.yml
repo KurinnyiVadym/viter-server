@@ -36,4 +36,4 @@ jobs:
           
       - name: Publish and push the container image
         run: |
-          dotnet publish --os linux --arch x64 -p ContainerImageTags='"${{ env.RELEASE_VERSION }};latest"' -c Release /p:PublishProfile=github
+          dotnet publish --os linux --arch x64 -p ContainerImageTags='"${{ steps.vars.outputs.sha_short }};latest"' -c Release /p:PublishProfile=github
