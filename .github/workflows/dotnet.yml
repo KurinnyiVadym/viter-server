@@ -27,6 +27,4 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Show
-      run: |
-          echo $RELEASE_VERSION
-          echo ${{ env.RELEASE_VERSION }
+      run: echo $RELEASE_VERSION
